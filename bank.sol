@@ -3,6 +3,11 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 contract Bank {
+    event event_add_balance(address Customer, uint256 Value);
+    event event_add_loan(address Customer, uint256 Value);
+    event event_withdraw(address Customer, uint256 Value);
+    event event_receive(address Donor, uint256 Value);
+
     constructor(string memory bankName) {
         bank_name = bankName;
         bank_owner_address = payable(msg.sender);
@@ -34,11 +39,15 @@ contract Bank {
     }
 
     function AddBalance(address payable CustomerAddress, uint256 Value) public {
+        require(msg.sender == bank_owner_address, "You are not the Boss");
         address_customer[CustomerAddress].balance += Value;
+        emit event_add_balance(CustomerAddress, Value);
     }
 
     function AddLoan(address payable CustomerAddress, uint256 Value) public {
+        require(msg.sender == bank_owner_address, "You are not the Boss");
         address_customer[CustomerAddress].loan += Value;
+        emit event_add_loan(CustomerAddress, Value);
     }
 
     function CheckContractBalance() external view returns (uint256) {
@@ -77,18 +86,24 @@ contract Bank {
 
     function Withdraw(uint256 Value) external returns (string memory) {
         address payable customer_address = payable(msg.sender);
-        if (address_customer[customer_address].balance < Value)
-            return "Insufficient balance";
+        require(
+            address_customer[customer_address].balance > Value,
+            "Insufficient balance"
+        );
         customer_address.transfer(Value);
         address_customer[msg.sender].balance -= Value;
+        emit event_withdraw(msg.sender, Value);
         return "Success";
     }
 
-    receive() external payable {}
+    receive() external payable {
+        emit event_receive(msg.sender, msg.value);
+    }
 
     fallback() external payable {}
 
     function Destroy() external {
+        require(msg.sender == bank_owner_address, "You are not the Boss");
         selfdestruct(bank_owner_address);
     }
 }

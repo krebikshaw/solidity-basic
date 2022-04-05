@@ -3,6 +3,11 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 contract Company {
+    event event_performance(address SalesAddress, uint256 Profit);
+    event event_add_sales(string Sales, address SalesAddress);
+    event event_withdraw(address SalesAddress, uint256 Balance);
+    event event_receive(address DonorAddress, uint256 Value);
+
     constructor(string memory name) {
         boss_name = name;
         boss_address = payable(msg.sender);
@@ -22,13 +27,16 @@ contract Company {
     mapping(string => Sales) name_sales;
 
     function AddPerformance(string memory Salesman, uint256 Profit) public {
+        require(msg.sender == boss_address, "You are not the boss");
         name_sales[Salesman].performance += Profit;
         name_sales[Salesman].salary += Profit / 10;
+        emit event_performance(name_sales[Salesman].sales_address, Profit);
     }
 
     function AddSales(string memory Salesman, address payable SalesAddress)
         public
     {
+        require(msg.sender == boss_address, "You are not the boss");
         all_address.push(SalesAddress);
         address_name[SalesAddress] = Salesman;
         name_sales[Salesman].name = Salesman;
@@ -36,6 +44,7 @@ contract Company {
         name_sales[Salesman].performance = 0;
         name_sales[Salesman].salary = 0;
         name_sales[Salesman].withdrawn = 0;
+        emit event_add_sales(Salesman, SalesAddress);
     }
 
     function CheckBalance(address payable SalesAddress)
@@ -65,17 +74,22 @@ contract Company {
     function Withdraw() external returns (uint256) {
         address payable user = payable(msg.sender);
         uint256 balance = CheckBalance(user);
+        require(balance > 0, "Balance not enought!");
         user.transfer(balance);
         string memory name = address_name[msg.sender];
         name_sales[name].withdrawn += balance;
+        emit event_withdraw(msg.sender, balance);
         return balance;
     }
 
     fallback() external payable {}
 
-    receive() external payable {}
+    receive() external payable {
+        emit event_receive(msg.sender, msg.value);
+    }
 
     function Destroy() external {
+        require(msg.sender == boss_address, "You are not the boss");
         selfdestruct(boss_address);
     }
 }
