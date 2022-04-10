@@ -27,6 +27,19 @@ contract Bank {
     }
     mapping(address => Customer) address_customer;
 
+    modifier IsOwner() {
+        require(msg.sender == bank_owner_address, "You are not the Boss");
+        _;
+    }
+
+    modifier ValidateBalance(address CustomerAddress, uint256 Value) {
+        require(
+            address_customer[CustomerAddress].balance > Value,
+            "Insufficient balance"
+        );
+        _;
+    }
+
     function AddCustomer(
         string memory CustomerName,
         address payable CustomerAddress
@@ -38,14 +51,18 @@ contract Bank {
         address_customer[CustomerAddress].loan = 0;
     }
 
-    function AddBalance(address payable CustomerAddress, uint256 Value) public {
-        require(msg.sender == bank_owner_address, "You are not the Boss");
+    function AddBalance(address payable CustomerAddress, uint256 Value)
+        public
+        IsOwner
+    {
         address_customer[CustomerAddress].balance += Value;
         emit event_add_balance(CustomerAddress, Value);
     }
 
-    function AddLoan(address payable CustomerAddress, uint256 Value) public {
-        require(msg.sender == bank_owner_address, "You are not the Boss");
+    function AddLoan(address payable CustomerAddress, uint256 Value)
+        public
+        IsOwner
+    {
         address_customer[CustomerAddress].loan += Value;
         emit event_add_loan(CustomerAddress, Value);
     }
@@ -84,12 +101,12 @@ contract Bank {
         return sum;
     }
 
-    function Withdraw(uint256 Value) external returns (string memory) {
+    function Withdraw(uint256 Value)
+        external
+        ValidateBalance(msg.sender, Value)
+        returns (string memory)
+    {
         address payable customer_address = payable(msg.sender);
-        require(
-            address_customer[customer_address].balance > Value,
-            "Insufficient balance"
-        );
         customer_address.transfer(Value);
         address_customer[msg.sender].balance -= Value;
         emit event_withdraw(msg.sender, Value);
@@ -102,8 +119,7 @@ contract Bank {
 
     fallback() external payable {}
 
-    function Destroy() external {
-        require(msg.sender == bank_owner_address, "You are not the Boss");
+    function Destroy() external IsOwner {
         selfdestruct(bank_owner_address);
     }
 }

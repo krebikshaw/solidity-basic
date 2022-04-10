@@ -26,8 +26,15 @@ contract Company {
     mapping(address => string) address_name;
     mapping(string => Sales) name_sales;
 
-    function AddPerformance(string memory Salesman, uint256 Profit) public {
+    modifier IsBoss() {
         require(msg.sender == boss_address, "You are not the boss");
+        _;
+    }
+
+    function AddPerformance(string memory Salesman, uint256 Profit)
+        public
+        IsBoss
+    {
         name_sales[Salesman].performance += Profit;
         name_sales[Salesman].salary += Profit / 10;
         emit event_performance(name_sales[Salesman].sales_address, Profit);
@@ -35,8 +42,8 @@ contract Company {
 
     function AddSales(string memory Salesman, address payable SalesAddress)
         public
+        IsBoss
     {
-        require(msg.sender == boss_address, "You are not the boss");
         all_address.push(SalesAddress);
         address_name[SalesAddress] = Salesman;
         name_sales[Salesman].name = Salesman;
@@ -88,8 +95,7 @@ contract Company {
         emit event_receive(msg.sender, msg.value);
     }
 
-    function Destroy() external {
-        require(msg.sender == boss_address, "You are not the boss");
+    function Destroy() external IsBoss {
         selfdestruct(boss_address);
     }
 }
