@@ -51,18 +51,12 @@ contract Bank {
         address_customer[CustomerAddress].loan = 0;
     }
 
-    function AddBalance(address payable CustomerAddress, uint256 Value)
-        public
-        IsOwner
-    {
+    function AddBalance(address payable CustomerAddress, uint256 Value) public {
         address_customer[CustomerAddress].balance += Value;
         emit event_add_balance(CustomerAddress, Value);
     }
 
-    function AddLoan(address payable CustomerAddress, uint256 Value)
-        public
-        IsOwner
-    {
+    function AddLoan(address payable CustomerAddress, uint256 Value) public {
         address_customer[CustomerAddress].loan += Value;
         emit event_add_loan(CustomerAddress, Value);
     }
