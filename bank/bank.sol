@@ -2,7 +2,19 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-contract Bank {
+import "../openzeppelin-contracts/Ownable.sol";
+
+library Calculate_bank {
+    function Interest(
+        uint256 Rate,
+        uint256 Amount,
+        uint256 Days
+    ) public pure returns (uint256) {
+        return (Amount * Rate * Days) / 1000 / 365;
+    }
+}
+
+contract Bank is Ownable {
     event event_add_balance(address Customer, uint256 Value);
     event event_add_loan(address Customer, uint256 Value);
     event event_withdraw(address Customer, uint256 Value);
@@ -10,11 +22,9 @@ contract Bank {
 
     constructor(string memory bankName) {
         bank_name = bankName;
-        bank_owner_address = payable(msg.sender);
     }
 
     string public bank_name;
-    address payable public bank_owner_address;
     address[] all_customer_address;
     uint256 customer_count = 0;
     uint8 deposit_rate;
@@ -26,11 +36,6 @@ contract Bank {
         uint256 loan;
     }
     mapping(address => Customer) address_customer;
-
-    modifier IsOwner() {
-        require(msg.sender == bank_owner_address, "You are not the Boss");
-        _;
-    }
 
     modifier ValidateBalance(address CustomerAddress, uint256 Value) {
         require(
@@ -113,7 +118,7 @@ contract Bank {
 
     fallback() external payable {}
 
-    function Destroy() external IsOwner {
-        selfdestruct(bank_owner_address);
+    function Destroy() external onlyOwner {
+        selfdestruct(payable(owner()));
     }
 }
