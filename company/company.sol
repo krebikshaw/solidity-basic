@@ -81,7 +81,7 @@ contract Company {
     function Withdraw() external returns (uint256) {
         address payable user = payable(msg.sender);
         uint256 balance = CheckBalance(user);
-        require(balance > 0, "Balance not enought!");
+        require(balance > 0, "Balance not enough!");
         user.transfer(balance);
         string memory name = address_name[msg.sender];
         name_sales[name].withdrawn += balance;
